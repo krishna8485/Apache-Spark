@@ -1,0 +1,23 @@
+from pyspark import SparkContext
+from pyspark.streaming import StreamingContext
+from pyspark.storagelevel import StorageLevel
+
+input_path = "file:///home/cloudera/input/"
+
+batch_interval=3
+
+sc = SparkContext()
+ssc = StreamingContext(sc, batch_interval)
+
+def is_outlier(v):
+
+	n = float(v)
+	return (v,n > 0.99 or n < 0.01)
+lines = ssc.textFileStream(input_path).map(is_outlier)
+
+lines.pprint()
+
+lines.saveAsTextFiles("raw/data"," csv")
+
+ssc.start()
+ssc.awaitTermination()
